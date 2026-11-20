@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анкетирование: ИИ в обучении</title>
+<style>
+  :root {
+    --blue: #3b82c4;
+    --orange: #f28c28;
+    --green: #5cb85c;
+    --yellow: #f2c744;
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --text: #222;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, #2c5aa0, #3b82c4);
+    color: #fff;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: 26px; }
+  header p { margin: 0; opacity: 0.92; max-width: 700px; margin: 0 auto; }
+
+  .container { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card h2 {
+    font-size: 18px;
+    margin: 0 0 14px;
+    color: #2c5aa0;
+  }
+  .card h2 .num {
+    display: inline-block;
+    background: #2c5aa0;
+    color: #fff;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    font-size: 14px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .option {
+    display: block;
+    border: 2px solid #dee3e8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+  }
+  .option:hover { border-color: var(--blue); }
+  .option input { position: absolute; opacity: 0; }
+  .option .radio, .option .check {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid #b6bec7;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 10px;
+    position: relative;
+    top: -1px;
+  }
+  .option.selected { border-color: var(--blue); background: #eef4fb; }
+  .option.selected .radio { border-color: var(--blue); }
+  .option.selected .radio::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--blue);
+    border-radius: 50%;
+  }
+
+  #submitRow { text-align: center; }
+  .form-msg {
+    display: none;
+    background: #fdecea;
+    color: #c0392b;
+    border: 1px solid #f5c6c0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  button {
+    background: #2c5aa0;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 34px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover { background: #234a86; }
+  button:disabled { background: #9aa7b8; cursor: not-allowed; }
+  button.secondary {
+    background: #eef1f5; color: #2c5aa0;
+    margin-left: 10px;
+  }
+  button.secondary:hover { background: #dfe5ec; }
+
+  /* Спасибо */
+  #done { display: none; text-align: center; padding: 60px 20px; }
+  #done.show { display: block; }
+  #done .icon { font-size: 70px; }
+  #done h2 { color: #2c5aa0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Анкетирование: использование ИИ в обучении</h1>
+  <p>Анкета для учащихся 9–10 классов. Ответь на каждый вопрос, выбрав один из вариантов.</p>
+</header>
+
+<div class="container">
+
+  <!-- ====== ФОРМА ОПРОСА ====== -->
+  <section id="ask">
+    <div id="questions"></div>
+    <div id="formMsg" class="form-msg"></div>
+    <div id="submitRow">
+      <button id="submitBtn" disabled>Отправить ответы</button>
+    </div>
+  </section>
+
+  <!-- ====== СТРАНИЦА ПОСЛЕ ОТПРАВКИ ====== -->
+  <section id="done">
+    <div class="icon">&#10004;</div>
+    <h2>Спасибо за участие!</h2>
+    <p>Твои ответы записаны. Анкету можно закрыть.</p>
+  </section>
+
+</div>
+
+
+<script>
+// ===== Данные анкеты =====
+const QUESTIONS = [
+  {
+    text: "Пользуюсь ли ты ИИ в учебе?",
+    options: ["Да", "Нет"]
+  },
+  {
+    text: "Какие AI-сервисы используешь чаще всего?",
+    options: ["Чат-боты (ChatGPT и аналоги)", "Генерация картинок", "Переводчики", "Не использую"]
+  },
+  {
+    text: "Как часто ты используешь ИИ?",
+    options: ["Каждый день", "Несколько раз в неделю", "Редко", "Не использую"]
+  },
+  {
+    text: "Помогает ли ИИ понимать материал?",
+    options: ["Да, сильно помогает", "Немного помогает", "Не помогает"]
+  },
+  {
+    text: "Используешь ли ИИ для повторения предметов?",
+    options: ["Да", "Нет"]
+  },
+  {
+    text: "Для каких предметов используешь ИИ?",
+    options: ["Математика и физика", "Языки (русский/иностранный)", "История и обществознание", "Другое"]
+  },
+  {
+    text: "Готов ли ты применять ИИ при подготовке?",
+    options: ["Готов, активно использую", "Готов, но редко", "Не готов"]
+  },
+  {
+    text: "Насколько удобны ИИ-сервисы?",
+    options: ["Очень удобно", "Достаточно удобно", "Не очень удобно", "Совсем неудобно"]
+  }
+];
+
+// ===== Состояние =====
+let currentInputs = [];
+
+// ===== Построение формы =====
+function buildForm() {
+  const wrap = document.getElementById("questions");
+  wrap.innerHTML = "";
+  currentInputs = [];
+
+  QUESTIONS.forEach((q, qi) => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    const h = document.createElement("h2");
+    h.innerHTML = '<span class="num">' + (qi + 1) + "</span>" + escapeHtml(q.text);
+    div.appendChild(h);
+
+    const optGroup = [];
+    q.options.forEach((opt, oi) => {
+      const label = document.createElement("label");
+      label.className = "option";
+      label.innerHTML =
+        '<input type="radio" name="q' + qi + '" value="' + oi + '">' +
+        '<span class="radio"></span>' + escapeHtml(opt);
+      label.addEventListener("click", function () {
+        document.querySelectorAll('.option input[name="q' + qi + '"]').forEach(inp => {
+          inp.parentElement.classList.remove("selected");
+        });
+        label.classList.add("selected");
+        currentInputs[qi] = oi;
+        checkComplete();
+      });
+      div.appendChild(label);
+    });
+
+    wrap.appendChild(div);
+  });
+}
+
+function checkComplete() {
+  const done = currentInputs.filter(v => v !== undefined).length;
+  document.getElementById("submitBtn").disabled = done < QUESTIONS.length;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ===== Отправка на сервер =====
+function showDone() {
+  document.getElementById("ask").style.display = "none";
+  document.getElementById("done").classList.add("show");
+  window.scrollTo(0, 0);
+}
+
+function showError(msg) {
+  var box = document.getElementById("formMsg");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+
+function hideError() {
+  var box = document.getElementById("formMsg");
+  box.style.display = "none";
+}
+
+document.getElementById("submitBtn").addEventListener("click", function () {
+  if (currentInputs.includes(undefined)) {
+    showError("Пожалуйста, ответь на все вопросы.");
+    return;
+  }
+  hideError();
+  var btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Отправка…";
+
+  fetch("/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers: currentInputs.slice() })
+  })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (res) {
+      if (!res.ok) {
+        btn.disabled = false;
+        btn.textContent = "Отправить ответы";
+        showError(res.j.error || "Не удалось отправить ответы. Попробуй ещё раз.");
+        return;
+      }
+      showDone();
+    })
+    .catch(function () {
+      btn.disabled = false;
+      btn.textContent = "Отправить ответы";
+      showError("Нет соединения с сервером. Попробуй ещё раз.");
+    });
+});
+
+// Инициализация
+buildForm();
+</script>
+</body>
+</html>
